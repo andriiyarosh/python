@@ -28,52 +28,23 @@ class6 = np.array([[0.05, 0.15],
                    [0.15, 0.36]])
 
 
-# метод возвращает эталонное расстояние от заданой точки до класса
+# метод возвращает мин расстояние от заданой точки до эталона класса
 # принимает на воход одинарный массив с точкой и класс, содержащий в себе массив точек
-def find_etalon(d1, *class_dots):
+def euclid_min_distance_to_class(d1, *class_dots):
     # запоминаем первую точку класса, чтобы с помощью неё вычислить эвклидово расстояние до заданой точки
     first_element = class_dots[0]
-    # вычисляем эвклидово расстояние (обычное расстояние от А до Б, только со своей формулой) от заданой точки до первой точки класса
-    # формула эвклидового расстояния - sqrt( (x1 - x2)^2 + (y1-y2)^2 )
+    # вычисляем эвклидово расстояние (обычное расстояние от А до Б, только со своей формулой) от заданой точки до
+    # первой точки класса формула эвклидового расстояния - sqrt( (x1 - x2)^2 + (y1-y2)^2 )
     min_d_euclid = math.sqrt((d1[0] - first_element[0]) ** 2 + (d1[1] - first_element[1]) ** 2)
 
     # проходим в цикле по всем точкам класса и для каждой из этих точек определяем эвклидово расстояние до заданой точки
-    for class_item in class_dots:
-        item_to_d1 = math.sqrt((d1[0] - class_item[0]) ** 2 + (d1[1] - class_item[1]) ** 2)
-    # находим минимальное евклидово расстояние и возвращаем его как ответ
+    for class_dot in class_dots:
+        item_to_d1 = math.sqrt((d1[0] - class_dot[0]) ** 2 + (d1[1] - class_dot[1]) ** 2)
+        # находим минимальное евклидово расстояние и возвращаем его как ответ
         if item_to_d1 <= min_d_euclid:
             min_d_euclid = item_to_d1
 
     return min_d_euclid
-
-
-# не рабочий
-def sum_of_two_etalones(d1, *_class):
-    first_element = _class[0]
-    first_element_index = 0
-    min_d_euclid_first = 0
-    for class_dot in range(len(_class)):
-        min_d_euclid_first = find_etalon(d1, first_element[class_dot])
-
-    for class_item in _class:
-        for class_dot in range(len(class_item)):
-            item_to_d1 = find_etalon(d1, class_item[class_dot])
-            if item_to_d1 <= min_d_euclid_first:
-                min_d_euclid_first = item_to_d1
-                first_element_index = class_dot
-
-    if first_element_index != 0:
-        min_d_euclid_second = find_etalon(d1, first_element[0])
-    else:
-        min_d_euclid_second = find_etalon(d1, first_element[1])
-    # __class.remove(__class[first_element_index])
-
-    for class_item in first_element:
-        item_to_d1 = find_etalon(d1, class_item)
-        if item_to_d1 <= min_d_euclid_second:
-            min_d_euclid_second = item_to_d1
-
-    return min_d_euclid_first + min_d_euclid_second
 
 
 # метод возвращает расстояние от точки до класса, которое вычисляется
@@ -89,7 +60,7 @@ def module_difference(d1, *class_dots):
     # проходим в цикле по всем точкам класса и для каждой из этих точек определяем расстояние до заданой точки
     for class_item in class_dots:
         item_to_d1 = max(math.fabs(d1[0] - class_item[0]), math.fabs(d1[1] - class_item[1]))
-    # находим минимальное евклидово расстояние и возвращаем его как ответ
+        # находим минимальное евклидово расстояние и возвращаем его как ответ
         if item_to_d1 <= min_distance_from_dot_to_class_dot:
             min_distance_from_dot_to_class_dot = item_to_d1
 
@@ -113,30 +84,31 @@ def dot_to_centroid(d, *class_dots):
     # формула, вычисляющая точку центроида
     centroid = (sum_x / length, sum_y / length)
     # вычисляем эталонное расстояние (просто расстояние) от заданой точки до центроида
-    return find_etalon(d, centroid)
+    to_centr = math.sqrt((d[0] - centroid[0]) ** 2 + (d[1] - centroid[1]) ** 2)
+    return to_centr
 
 
-# не работат, но я написал как должно работать
-# метод возвращат индекс класса (номер входящего элемента класса), у которого сумма двух эталонов минимальна
-def get_index_of_class_with_closest_two_etalones(d1, *classes_list):
-    # запоминаем первый класс
-    first_element = classes_list[0]
-    # запоминаем расстояние от заданой точки до минимальной суммы двух эталонов
-    min_d = sum_of_two_etalones(d1, first_element)
-    # запоминаем индекс класса
-    class_index = 0
+def sum_of_two_etalones(dot, *class_dots):
+    first_dot = class_dots[0][0]
+    first_dot_index = 0
+    min_d_euclid_first = math.sqrt((dot[0] - first_dot[0]) ** 2 + (dot[1] - first_dot[1]) ** 2)
+    if class_dots[0].__len__() == 1:
+        return min_d_euclid_first
 
-    # проходим по массиву классов
-    for class_item in classes_list:
-        # запоминаем расстояние от заданой точки до минимальной суммы двух эталонов текущего класса
-        min = sum_of_two_etalones(d1, class_item)
-        # ищем минимальное значение и запоминаем индекс класса, к которому принадлежит заданная точка
-        # (точка принадлежит к тому классу, к которому расположена ближе всего)
-        if min <= min_d:
-            min_d = min
-            class_index = classes_list.index(class_item) + 1
+    second_dot = class_dots[0][1]
+    second_dot_index = 1
+    min_d_euclid_second = math.sqrt((dot[0] - second_dot[0]) ** 2 + (dot[1] - second_dot[1]) ** 2)
 
-    return class_index
+    for class_dot in range(len(class_dots[0])):
+        euclid_to_class_dot = math.sqrt((dot[0] - class_dots[0][class_dot-1][0]) ** 2 + (dot[1] - class_dots[0][class_dot-1][1]) ** 2)
+        if euclid_to_class_dot <= min_d_euclid_first and first_dot_index != class_dot and second_dot_index != class_dot:
+            min_d_euclid_first = euclid_to_class_dot
+            first_dot_index = class_dot
+        if euclid_to_class_dot <= min_d_euclid_second and second_dot_index != class_dot and first_dot_index != class_dot:
+            min_d_euclid_second = euclid_to_class_dot
+            second_dot_index = class_dot
+
+    return min_d_euclid_first + min_d_euclid_second
 
 
 # метод возвращает индекс класса - его позицию, которая я вляется самой минимальной среди переданнах значений
@@ -165,11 +137,12 @@ a = np.array([dotX, dotY])
 p7, = plt.plot(a[0], a[1], "*b")
 # выводим ответ на 1 задание
 print('Euclidean: Your dot relates to class with index of',
-      determine_class_index(find_etalon(a, class2[0, :], class2[1, :], class2[2, :], class2[3, :], class2[4, :]),
-                            find_etalon(a, class3[0, :], class3[1, :], class3[2, :], class3[3, :], class3[4, :]),
-                            find_etalon(a, class4[0, :], class4[1, :], class4[2, :], class4[3, :], class4[4, :]),
-                            find_etalon(a, class6[0, :], class6[1, :], class6[2, :], class6[3, :],
-                                        class6[4, :])))
+      determine_class_index(
+          euclid_min_distance_to_class(a, class2[0, :], class2[1, :], class2[2, :], class2[3, :], class2[4, :]),
+          euclid_min_distance_to_class(a, class3[0, :], class3[1, :], class3[2, :], class3[3, :], class3[4, :]),
+          euclid_min_distance_to_class(a, class4[0, :], class4[1, :], class4[2, :], class4[3, :], class4[4, :]),
+          euclid_min_distance_to_class(a, class6[0, :], class6[1, :], class6[2, :], class6[3, :],
+                                       class6[4, :])))
 # выводим ответ на 2 задание
 print('Max of modules: Your dot relates to class with index of',
       determine_class_index(module_difference(a, class2[0, :], class2[1, :], class2[2, :], class2[3, :], class2[4, :]),
@@ -186,7 +159,10 @@ print('Object to class, 1: Your dot relates to class with index of',
 
 # выводим ответ на 4 задание
 print('Object to class, 5: Your dot relates to class with index of',
-      get_index_of_class_with_closest_two_etalones(a, class2, class3, class4, class6))
+      determine_class_index(sum_of_two_etalones(a, class2),
+                            sum_of_two_etalones(a, class3),
+                            sum_of_two_etalones(a, class4),
+                            sum_of_two_etalones(a, class6)))
 
 # задаем легенди для каждой точки
 plt.legend((p2, p3, p4, p6, p7), ('class2', 'class3', 'class4', 'class6', 'dot'))
